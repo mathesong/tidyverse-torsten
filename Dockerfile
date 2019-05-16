@@ -3,6 +3,7 @@ MAINTAINER Granville J Matheson mathesong@gmail.com
 
 # Mostly copied from andrewheiss/tidyverse-stan, but modified to get Torsten
 
+
 # Install ed, since nloptr needs it to compile
 # Install clang and ccache to speed up Stan installation
 # Install libxt-dev for Cairo 
@@ -17,6 +18,7 @@ RUN apt-get update \
        clang \
        ccache \
 	   cargo \
+	   curl \
        libxt-dev \
 	   lbzip2 \
 	   libfftw3-dev \
@@ -53,8 +55,9 @@ RUN apt-get update \
   mercurial gdal-bin libgdal-dev gsl-bin libgsl-dev \ 
   libc6-i386
   
-RUN install2.r --error \
-  --repos "https://stat.ethz.ch/CRAN/" \
+# rjags 
+RUN install2.r --error --deps TRUE \
+  --repos "http://cran.rstudio.com/" \
   rjags \
   R2jags
 
@@ -92,9 +95,11 @@ RUN mkdir -p $HOME/.R \
     && echo "rstan::rstan_options(auto_write = TRUE)\n" >> /home/rstudio/.Rprofile \
     && echo "options(mc.cores = parallel::detectCores())\n" >> /home/rstudio/.Rprofile
 	
+	
 # Install rstanarm, brms, and friends
 RUN install2.r --error --deps TRUE \
-        rjags loo bayesplot rstantools brms ggmcmc  \
+		--repos "http://cran.rstudio.com/" \
+        loo bayesplot rstantools brms ggmcmc  \
 		lme4 nlme tidybayes \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 	
