@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:3.6.0
+FROM rocker/tidyverse:3.5.3
 MAINTAINER Granville J Matheson mathesong@gmail.com
 
 # Mostly copied from andrewheiss/tidyverse-stan, but modified to get Torsten
@@ -59,10 +59,8 @@ RUN apt-get update \
 RUN install2.r --error --deps TRUE \
   --repos "http://cran.rstudio.com/" \
   rjags \
-  R2jags
+  R2jags	
 
-# Set up environment
-# Use correct Stan Makevars: https://github.com/stan-dev/rstan/wiki/Installing-RStan-on-Mac-or-Linux#prerequisite--c-toolchain-and-configuration
 RUN mkdir -p $HOME/.R \
     # Add global configuration files
     # Docker chokes on memory issues when compiling with gcc, so use ccache and clang++ instead
@@ -92,14 +90,28 @@ RUN mkdir -p $HOME/.R \
         \nhash_dir = false \
         \n" >> $HOME/.ccache/ccache.conf \
     # Add configuration files for RStudio user
+    && mkdir -p /home/rstudio/.R/ \
+    && echo '\n \
+        \nCXXFLAGS=-g -O3 -std=c++1y -mtune=native -march=native -Wno-unused-variable -Wno-unused-function -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g -pedantic -g0 \
+        \n \
+		\nCXXFLAGS += -DBOOST_MPL_CFG_NO_PREPROCESSED_HEADERS -DBOOST_MPL_LIMIT_LIST_SIZE=30 \
+		\n \
+        \nCXXFLAGS += -O3 -mtune=native -march=native -Wno-unused-variable -Wno-unused-function -Wno-macro-redefined \
+		\n \
+        \nCXX14 = clang++ -fPIC \
+		\n \
+		\nCXX14FLAGS=-O3 -std=c++1y -march=native -mtune=native -Wno-unused-variable -Wno-unused-function \
+		\n \
+		\nCXX14FLAGS += -DBOOST_MPL_CFG_NO_PREPROCESSED_HEADERS -DBOOST_MPL_LIMIT_LIST_SIZE=30 \
+		\n \
+        \nCXX14FLAGS += -fPIC \
+        \n' >> /home/rstudio/.R/Makevars \
     && echo "rstan::rstan_options(auto_write = TRUE)\n" >> /home/rstudio/.Rprofile \
     && echo "options(mc.cores = parallel::detectCores())\n" >> /home/rstudio/.Rprofile
-	
-	
+
 # Install rstanarm, brms, and friends
 RUN install2.r --error --deps TRUE \
-		--repos "http://cran.rstudio.com/" \
-        loo bayesplot rstantools brms ggmcmc  \
+        StanHeaders rstan loo bayesplot rstantools brms ggmcmc  \
 		lme4 nlme tidybayes \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 	
