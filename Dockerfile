@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:3.5.3
+FROM rocker/tidyverse:3.6.0
 MAINTAINER Granville J Matheson mathesong@gmail.com
 
 # Mostly copied from andrewheiss/tidyverse-stan, but modified to get Torsten
